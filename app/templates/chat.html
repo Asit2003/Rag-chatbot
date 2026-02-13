@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-header">
+  <h1>Chat Interface</h1>
+  <p>Ask questions against your indexed documents with streamed responses.</p>
+</section>
+
+<section class="card chat-card">
+  <div id="chatMessages" class="chat-messages"></div>
+  <form id="chatForm" class="chat-composer">
+    <textarea id="chatInput" placeholder="Type your question..." rows="3" required></textarea>
+    <div class="composer-actions">
+      <button type="submit" id="sendBtn">Send</button>
+      <button type="button" id="clearBtn" class="secondary">Clear</button>
+    </div>
+  </form>
+</section>
+
+<script src="/static/js/chat.js" defer></script>
+{% endblock %}

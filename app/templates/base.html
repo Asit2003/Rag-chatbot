@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ title if title else "RAG Chatbot" }}</title>
+    <link rel="stylesheet" href="/static/css/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">RAG Assistant</div>
+        <nav>
+          <a class="nav-item {% if active == 'chat' %}active{% endif %}" href="/chat">Chat</a>
+          <a class="nav-item {% if active == 'data' %}active{% endif %}" href="/data-management">Data Management</a>
+          <a class="nav-item {% if active == 'settings' %}active{% endif %}" href="/settings">Settings</a>
+        </nav>
+      </aside>
+      <main class="content">{% block content %}{% endblock %}</main>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-header">
+  <h1>Settings</h1>
+  <p>Choose model provider, active model, and manage API keys securely.</p>
+</section>
+
+<section class="card">
+  <form id="settingsForm" class="settings-form">
+    <label>
+      Provider
+      <select id="providerSelect"></select>
+    </label>
+
+    <label>
+      Model
+      <select id="modelSelect"></select>
+      <input id="customModelInput" type="text" placeholder="Custom model name" />
+      <span class="hint" id="modelHint"></span>
+    </label>
+
+    <label>
+      Ollama Base URL
+      <input id="ollamaBaseUrl" type="url" placeholder="http://localhost:11434" required />
+    </label>
+
+    <label>
+      Temperature
+      <input id="temperature" type="number" min="0" max="2" step="0.1" />
+    </label>
+
+    <button type="submit">Save Settings</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>API Key</h2>
+  <p class="hint">One API key is needed per provider, not per model. Use the selected provider below.</p>
+  <div class="api-card">
+    <h3 id="apiProviderLabel">Provider: OLLAMA</h3>
+    <div id="apiKeyState" class="api-status">API key not required for Ollama.</div>
+    <input id="providerApiKeyInput" type="password" placeholder="Enter provider API key" />
+    <div class="composer-actions">
+      <button id="saveApiKeyBtn" type="button">Save Key</button>
+      <button id="removeApiKeyBtn" class="secondary" type="button">Remove Key</button>
+    </div>
+  </div>
+</section>
+
+<div id="status" class="status" aria-live="polite"></div>
+<script src="/static/js/settings.js" defer></script>
+{% endblock %}

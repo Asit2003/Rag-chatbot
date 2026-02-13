@@ -1,0 +1,11 @@
+.venv
+rag
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.git
+.gitignore
+data/uploads/*
+data/chroma/*
+data/secrets/*

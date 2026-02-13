@@ -1,0 +1,34 @@
+@startuml
+title Streaming RAG Chat Sequence (LangChain)
+
+actor User
+participant "Chat UI" as UI
+participant "FastAPI /api/chat/stream" as API
+participant "RAG Service" as RAG
+participant "LangChain Retriever\n(Chroma)" as RET
+participant "Settings Service" as SET
+participant "LangChain Chat Model" as LLM
+
+User -> UI : Enter question and submit
+UI -> API : POST /api/chat/stream {message, history}
+API -> RAG : stream_answer(message, history)
+
+RAG -> RET : similarity search top-k
+alt Vector DB empty or no hits
+  RAG --> API : fallback tokens
+  API --> UI : NDJSON token stream
+else Context available
+  RAG -> SET : load provider/model/key
+  SET --> RAG : effective settings
+  RAG -> LLM : stream(messages + context)
+  loop token chunks
+    LLM --> RAG : chunk
+    RAG --> API : token
+    API --> UI : NDJSON token
+  end
+end
+
+API --> UI : {"type":"done"}
+UI --> User : Render final answer
+
+@enduml

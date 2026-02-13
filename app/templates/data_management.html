@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-header">
+  <h1>Data Management</h1>
+  <p>Upload and maintain PDF, DOCX, and TXT files used in retrieval.</p>
+</section>
+
+<section class="card">
+  <form id="uploadForm" class="upload-form">
+    <input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt" />
+    <button type="submit">Upload & Index</button>
+  </form>
+  <p class="hint">Max upload size is controlled by backend config.</p>
+</section>
+
+<section class="card">
+  <div class="table-header">
+    <h2>Indexed Files</h2>
+    <button id="refreshBtn" class="secondary">Refresh</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Size</th>
+          <th>Chunks</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="filesTable"></tbody>
+    </table>
+  </div>
+</section>
+
+<div id="toast" class="toast" hidden></div>
+<script src="/static/js/data_management.js" defer></script>
+{% endblock %}

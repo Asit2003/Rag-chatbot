@@ -1,0 +1,34 @@
+@startuml
+title RAG Chatbot - Architecture (LangChain + PostgreSQL)
+
+actor User
+
+node "Browser UI\n(HTML/CSS/JS)" as UI {
+  component "Chat Page"
+  component "Data Management Page"
+  component "Settings Page"
+}
+
+node "FastAPI App" as API {
+  component "Routes\n/pages, /api/files, /api/settings, /api/chat"
+  component "Document Service"
+  component "Settings Service"
+  component "RAG Service"
+  component "LangChain Layer\n(Text Splitter + Retrieval + Chat Models)"
+}
+
+database "PostgreSQL\nsettings + metadata" as POSTGRES
+database "ChromaDB\ndata/chroma/" as CHROMA
+folder "Uploads\ndata/uploads/" as UPLOADS
+folder "Secrets\ndata/secrets/" as SECRETS
+cloud "LLM Providers\n(OpenAI/Anthropic/Gemini/Groq/Ollama)" as LLM
+
+User --> UI
+UI --> API : HTTP/JSON + NDJSON stream
+API --> POSTGRES : settings + document metadata
+API --> UPLOADS : store/remove files
+API --> CHROMA : add/query/delete vectors
+API --> SECRETS : encrypted API keys
+API --> LLM : streaming completions via LangChain
+
+@enduml
