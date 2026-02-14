@@ -31,12 +31,13 @@
           linear-gradient(0deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
           linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
         background-size: 24px 24px;
+        overflow: hidden;
       }
 
       main {
         max-width: 980px;
         margin: 0 auto;
-        min-height: 100vh;
+        height: 100vh;
         padding: 16px 20px;
         display: flex;
         flex-direction: column;
@@ -126,6 +127,42 @@
         align-self: flex-start;
         background: #ffffff;
         color: var(--ink);
+      }
+
+      .message p {
+        margin: 0 0 8px;
+      }
+
+      .message p:last-child {
+        margin-bottom: 0;
+      }
+
+      .message ul,
+      .message ol {
+        margin: 0 0 8px 20px;
+        padding: 0;
+      }
+
+      .message li {
+        margin: 4px 0;
+      }
+
+      .message code {
+        border: 1px solid var(--border);
+        padding: 2px 4px;
+        background: #ffffff;
+        font-family: "Courier New", monospace;
+        font-size: 0.95em;
+      }
+
+      .message pre {
+        border: 2px solid var(--border);
+        padding: 12px;
+        background: #ffffff;
+        font-family: "Courier New", monospace;
+        font-size: 0.95em;
+        overflow: auto;
+        margin: 0 0 8px;
       }
 
       form {
@@ -242,6 +279,92 @@
 
       const history = [];
 
+      function escapeHtml(text) {
+        return text
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function renderMarkdown(source) {
+        if (!source) return "";
+        const safe = escapeHtml(source);
+        const codeBlocks = [];
+        let temp = safe.replace(/```([\s\S]*?)```/g, (_, code) => {
+          const index = codeBlocks.length;
+          codeBlocks.push(`<pre><code>${code}</code></pre>`);
+          return `__CODEBLOCK_${index}__`;
+        });
+
+        temp = temp.replace(/`([^`]+)`/g, "<code>$1</code>");
+        temp = temp.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+        temp = temp.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+
+        const lines = temp.split(/\r?\n/);
+        const parts = [];
+        let paragraph = [];
+        let listType = null;
+
+        const flushParagraph = () => {
+          if (paragraph.length) {
+            parts.push(`<p>${paragraph.join("<br>")}</p>`);
+            paragraph = [];
+          }
+        };
+
+        const closeList = () => {
+          if (listType) {
+            parts.push(`</${listType}>`);
+            listType = null;
+          }
+        };
+
+        const openList = (type) => {
+          if (listType !== type) {
+            closeList();
+            parts.push(`<${type}>`);
+            listType = type;
+          }
+        };
+
+        for (const rawLine of lines) {
+          const line = rawLine.trimEnd();
+          if (!line.trim()) {
+            flushParagraph();
+            closeList();
+            continue;
+          }
+
+          const ulMatch = line.match(/^\s*[-*]\s+(.+)/);
+          if (ulMatch) {
+            flushParagraph();
+            openList("ul");
+            parts.push(`<li>${ulMatch[1]}</li>`);
+            continue;
+          }
+
+          const olMatch = line.match(/^\s*\d+\.\s+(.+)/);
+          if (olMatch) {
+            flushParagraph();
+            openList("ol");
+            parts.push(`<li>${olMatch[1]}</li>`);
+            continue;
+          }
+
+          closeList();
+          paragraph.push(line);
+        }
+
+        flushParagraph();
+        closeList();
+
+        let html = parts.join("");
+        html = html.replace(/__CODEBLOCK_(\d+)__/g, (_, index) => codeBlocks[Number(index)] || "");
+        return html;
+      }
+
       function setStatus(text, isError = false) {
         statusEl.textContent = text;
         statusEl.dataset.state = isError ? "error" : "ok";
@@ -252,10 +375,14 @@
         sendBtn.textContent = isLoading ? "Sending..." : "Send";
       }
 
-      function addMessage(role, content) {
+      function addMessage(role, content, options = {}) {
         const el = document.createElement("div");
         el.className = `message ${role}`;
-        el.textContent = content;
+        if (options.render === false) {
+          el.textContent = content;
+        } else {
+          el.innerHTML = renderMarkdown(content);
+        }
         chatMessages.appendChild(el);
         chatMessages.scrollTop = chatMessages.scrollHeight;
         return el;
@@ -281,7 +408,7 @@
         const decoder = new TextDecoder();
         let buffer = "";
         let assistantText = "";
-        const assistantBubble = addMessage("assistant", "");
+        const assistantBubble = addMessage("assistant", "", { render: false });
 
         while (true) {
           const { value, done } = await reader.read();
@@ -307,6 +434,7 @@
         }
 
         const finalText = assistantText.trim();
+        assistantBubble.innerHTML = renderMarkdown(finalText || "(empty response)");
         history.push({ role: "assistant", content: finalText || "(empty response)" });
       }
 

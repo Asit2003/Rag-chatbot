@@ -16,8 +16,8 @@ class RagService:
     def stream_answer(self, message: str, history: list[dict[str, str]]) -> Generator[str, None, None]:
         if self.vector_store.is_empty():
             fallback = (
-                "I do not have any indexed documents yet. "
-                "Please upload PDF, DOCX, or TXT files in Data Management so I can answer using your data."
+                "I do not have any sources connected yet. "
+                "Please add your documents in Data Management so I can answer using your content."
             )
             for token in fallback.split(" "):
                 yield token + " "
@@ -27,16 +27,16 @@ class RagService:
             hits = self.vector_store.retrieve(query=message, limit=6)
         except VectorStoreError:
             fallback = (
-                "I could not access the retrieval service right now. "
-                "Please verify Ollama is running for embeddings and try again."
+                "I could not access your knowledge sources right now. "
+                "Please try again in a moment."
             )
             for token in fallback.split(" "):
                 yield token + " "
             return
         if not hits:
             fallback = (
-                "I could not find relevant context in your indexed files for that question. "
-                "Please try a more specific query or upload additional documents."
+                "I could not find relevant information in your connected sources for that question. "
+                "Please try a more specific query or tell me which document or section to use."
             )
             for token in fallback.split(" "):
                 yield token + " "
@@ -48,11 +48,45 @@ class RagService:
 
         context_text = "\n\n".join(context_blocks)
 
+        # system_prompt = (
+        #     "You are a precise enterprise assistant for end users. "
+        #     "Answer only from the provided context. Do not add or infer facts that are not in the context. "
+        #     "If the context is insufficient, say so plainly and politely, explain what is missing, "
+        #     "and ask one or two focused follow-up questions. "
+        #     "Never mention internal systems (vector databases, embeddings, retrieval) or file formats. "
+        #     "When the user asks for information that is not in the context, "
+        #     "suggest the next step in plain language, such as adding the relevant documents in Data Management. "
+        #     "Keep responses concise and structured."
+        # )
         system_prompt = (
-            "You are a precise enterprise assistant. "
-            "Answer only from the provided context. "
-            "If context is insufficient, say what is missing and ask a focused follow-up."
-        )
+    "You are a precise and helpful enterprise assistant for end users.\n"
+
+    "PRIMARY RULES:\n"
+    "- If relevant context is provided, answer using only that context.\n"
+    "- Do not add, assume, or invent facts that are not in the context.\n"
+    "- Do not mention internal systems, retrieval, databases, or file formats.\n"
+
+    "WHEN CONTEXT IS SUFFICIENT:\n"
+    "- Give a clear, concise, and structured answer grounded in the context.\n"
+
+    "WHEN CONTEXT IS PARTIAL:\n"
+    "- Answer the part supported by context.\n"
+    "- Briefly say what information is missing.\n"
+    "- Ask 1–2 focused follow-up questions.\n"
+
+    "WHEN NO RELEVANT CONTEXT IS AVAILABLE:\n"
+    "- Do NOT say you lack context or documents.\n"
+    "- Provide general guidance based on common best practices.\n"
+    "- Clearly signal uncertainty with phrases like "
+    "'Typically', 'In general', or 'This may depend on your setup'.\n"
+    "- Invite the user to share more details so you can give a precise answer.\n"
+
+    "STYLE:\n"
+    "- Be concise, neutral, and helpful.\n"
+    "- Prefer bullet points or short paragraphs.\n"
+    "- Focus on solving the user's problem."
+)
+
 
         messages: list[dict[str, str]] = [
             {"role": "system", "content": system_prompt},
@@ -90,4 +124,3 @@ class RagService:
             err = f"Model request failed: {exc}"
             for token in err.split(" "):
                 yield token + " "
-
