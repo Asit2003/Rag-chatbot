@@ -10,6 +10,7 @@
   - `anthropic`
   - `gemini`
   - `groq`
+- Embeddings and retrieval require an OpenAI API key saved in Settings.
 - Graceful fallback responses when:
   - No files are indexed.
   - No relevant chunks are retrieved.
@@ -18,7 +19,7 @@
 ## 2. Data Management (`/data-management`)
 
 - Multi-file upload (`.pdf`, `.docx`, `.txt`).
-- File parsing and text chunking with LangChain splitter.
+- File parsing and text chunking.
 - Vector indexing in Chroma (`documents` collection).
 - File CRUD operations:
   - Create: upload and index.
@@ -30,12 +31,16 @@
   - Empty file
   - Oversized file
   - Parse failure rollback
+- Storage backend:
+  - Supabase Storage when configured, otherwise local storage in `data/uploads/`.
 
 ## 3. Settings (`/settings`)
 
 - Select active provider and model.
-- Ollama model discovery from `/api/tags`.
-- Groq model discovery from Groq models API when Groq key is set, with fallback catalog.
+- Provider model discovery:
+  - Ollama from `/api/tags` on the configured base URL
+  - Groq from Groq models API when a Groq key is set (fallback catalog otherwise)
+  - Other providers use a local catalog
 - API key management for non-Ollama providers:
   - Single API key input for the currently selected provider
   - One provider key unlocks all models for that provider
@@ -52,7 +57,6 @@
 
 - API keys encrypted at rest using Fernet.
 - Encryption key stored in `data/secrets/fernet.key`.
-- App metadata stored in PostgreSQL (Supabase).
-- Uploaded files stored in Supabase Storage by default when configured.
-- Local fallback storage lives at `data/uploads/`.
+- Metadata stored in PostgreSQL (documents).
+- Uploaded files stored in Supabase Storage when configured; local fallback lives at `data/uploads/`.
 - Chroma vectors stored in `data/chroma/`.

@@ -38,6 +38,8 @@ Set environment variables in your cloud container service:
 
 Mount persistent storage for `/app/data` for chroma/secrets/settings.
 
+After deploy, open `/settings` and save an OpenAI API key. Embeddings require this key for indexing and retrieval.
+
 ## 5. Run Health Check
 
 - Open `/chat`
