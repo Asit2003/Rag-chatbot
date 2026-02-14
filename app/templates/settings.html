@@ -1,68 +1,527 @@
-﻿{% extends "base.html" %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Settings</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --ink: #000000;
+        --muted: #222222;
+        --border: #000000;
+        --shadow: rgba(0, 0, 0, 0.08);
+      }
 
-{% block inbox %}
-<div class="inbox-header">
-  <div>
-    <h2>Providers</h2>
-    <p class="inbox-subtitle">Active model and keys</p>
-  </div>
-</div>
-<div class="inbox-list">
-  <div class="inbox-card">Ollama (local)</div>
-  <div class="inbox-card">OpenAI</div>
-  <div class="inbox-card">Gemini</div>
-  <div class="inbox-card">Anthropic</div>
-  <div class="inbox-card">Groq</div>
-</div>
-{% endblock %}
+      * {
+        box-sizing: border-box;
+      }
 
-{% block content %}
-<section class="page-header">
-  <h1>Settings</h1>
-  <p>Choose model provider, active model, and manage API keys securely.</p>
-</section>
+      body {
+        margin: 0;
+        font-family: "Georgia", "Times New Roman", serif;
+        color: var(--ink);
+        background-color: var(--bg);
+        background-image:
+          linear-gradient(0deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+        background-size: 24px 24px;
+      }
 
-<section class="card">
-  <form id="settingsForm" class="settings-form">
-    <label>
-      Provider
-      <select id="providerSelect"></select>
-    </label>
+      main {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 32px 20px 64px;
+        animation: fadeIn 0.35s ease-out;
+      }
 
-    <label>
-      Model
-      <select id="modelSelect"></select>
-      <input id="customModelInput" type="text" placeholder="Custom model name" />
-      <span class="hint" id="modelHint"></span>
-    </label>
+      .nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 12px;
+        border: 2px solid var(--border);
+        background: #ffffff;
+        box-shadow: 6px 6px 0 var(--border);
+      }
 
-    <label>
-      Ollama Base URL
-      <input id="ollamaBaseUrl" type="url" placeholder="http://localhost:11434" required />
-    </label>
+      .nav a {
+        text-decoration: none;
+        color: var(--ink);
+        border: 2px solid var(--border);
+        padding: 6px 12px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+      }
 
-    <label>
-      Temperature
-      <input id="temperature" type="number" min="0" max="2" step="0.1" />
-    </label>
+      .nav a.active {
+        background: var(--ink);
+        color: #ffffff;
+      }
 
-    <div class="api-inline">
-      <div>
-        <div id="apiProviderLabel" class="api-inline-title">Provider: OLLAMA</div>
-        <div id="apiKeyState" class="api-status">API key not required for Ollama.</div>
-        <div id="apiKeyInputWrap">
-          <input id="providerApiKeyInput" type="password" placeholder="Enter provider API key" />
-          <p class="hint">Use Save Settings to store the key.</p>
-        </div>
-      </div>
-      <button id="removeApiKeyBtn" class="secondary" type="button">Remove Key</button>
-    </div>
+      header {
+        margin-top: 24px;
+      }
 
-    <button type="submit" id="saveSettingsBtn">Save Settings</button>
-  </form>
-</section>
+      header h1 {
+        font-size: 32px;
+        margin: 0 0 8px;
+      }
 
-<div id="status" class="status" aria-live="polite"></div>
-<script src="{{ url_for('static', path='js/settings.js') }}" defer></script>
-{% endblock %}
+      header p {
+        margin: 0;
+        color: var(--muted);
+      }
 
+      .panel {
+        margin-top: 24px;
+        border: 2px solid var(--border);
+        padding: 16px;
+        background: #ffffff;
+        box-shadow: 8px 8px 0 var(--border);
+      }
+
+      form {
+        display: grid;
+        gap: 16px;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        font-weight: 700;
+      }
+
+      input,
+      select {
+        border: 2px solid var(--border);
+        padding: 8px;
+        background: #ffffff;
+        color: var(--ink);
+        font-family: inherit;
+        font-size: 16px;
+      }
+
+      .row {
+        display: grid;
+        gap: 12px;
+      }
+
+      button {
+        border: 2px solid var(--border);
+        background: var(--ink);
+        color: #ffffff;
+        padding: 10px 16px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      button.secondary {
+        background: #ffffff;
+        color: var(--ink);
+      }
+
+      button[disabled] {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+
+      .api-panel {
+        border: 2px solid var(--border);
+        padding: 12px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .api-panel h3 {
+        margin: 0;
+      }
+
+      .status {
+        margin-top: 12px;
+        min-height: 20px;
+        font-weight: 600;
+      }
+
+      .status[data-state="error"] {
+        color: #000000;
+        text-decoration: underline;
+      }
+
+      .hint {
+        font-size: 14px;
+        color: var(--muted);
+        font-weight: 400;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 720px) {
+        form {
+          gap: 12px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        main {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <nav class="nav" aria-label="Primary">
+        <a href="/chat">Chat</a>
+        <a href="/data-management">Data Management</a>
+        <a class="active" href="/settings">Settings</a>
+      </nav>
+
+      <header>
+        <h1>Settings</h1>
+        <p>Choose provider, model, and manage API keys.</p>
+      </header>
+
+      <section class="panel">
+        <form id="settingsForm">
+          <label>
+            Provider
+            <select id="providerSelect">
+              <option value="" disabled selected>Loading providers...</option>
+            </select>
+          </label>
+
+          <label>
+            Model
+            <select id="modelSelect">
+              <option value="" disabled selected>Loading models...</option>
+            </select>
+            <input id="customModelInput" type="text" placeholder="Custom model name" />
+            <span class="hint" id="modelHint"></span>
+          </label>
+
+          <label>
+            Ollama Base URL
+            <input id="ollamaBaseUrl" type="url" placeholder="http://localhost:11434" required />
+          </label>
+
+          <label>
+            Temperature
+            <input id="temperature" type="number" min="0" max="2" step="0.1" />
+          </label>
+
+          <div class="api-panel">
+            <h3 id="apiProviderLabel">Provider: --</h3>
+            <div id="apiKeyState" class="hint">API key status will appear here.</div>
+            <input id="providerApiKeyInput" type="password" placeholder="Enter provider API key" />
+            <div class="row">
+              <button id="removeApiKeyBtn" class="secondary" type="button">Remove API Key</button>
+            </div>
+          </div>
+
+          <button type="submit" id="saveSettingsBtn">Save Settings</button>
+        </form>
+
+        <div class="status" id="status" data-state="ok">Loading...</div>
+      </section>
+    </main>
+
+    <script>
+      const providerSelect = document.getElementById("providerSelect");
+      const modelSelect = document.getElementById("modelSelect");
+      const customModelInput = document.getElementById("customModelInput");
+      const modelHint = document.getElementById("modelHint");
+      const ollamaBaseUrl = document.getElementById("ollamaBaseUrl");
+      const temperatureInput = document.getElementById("temperature");
+      const settingsForm = document.getElementById("settingsForm");
+      const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+      const statusEl = document.getElementById("status");
+
+      const apiProviderLabel = document.getElementById("apiProviderLabel");
+      const apiKeyState = document.getElementById("apiKeyState");
+      const providerApiKeyInput = document.getElementById("providerApiKeyInput");
+      const removeApiKeyBtn = document.getElementById("removeApiKeyBtn");
+
+      let settingsCache = null;
+
+      function setStatus(text, isError = false) {
+        statusEl.textContent = text;
+        statusEl.dataset.state = isError ? "error" : "ok";
+      }
+
+      function setButtonLoading(button, isLoading, loadingText) {
+        button.disabled = isLoading;
+        if (!button.dataset.defaultText) {
+          button.dataset.defaultText = button.textContent;
+        }
+        button.textContent = isLoading ? loadingText : button.dataset.defaultText;
+      }
+
+      async function fetchSettings() {
+        const res = await fetch("/api/settings");
+        if (!res.ok) throw new Error("Unable to load settings");
+        return res.json();
+      }
+
+      async function fetchProviderModels(provider) {
+        const baseUrl = ollamaBaseUrl.value.trim();
+        const query = baseUrl ? `?base_url=${encodeURIComponent(baseUrl)}` : "";
+        try {
+          const res = await fetch(`/api/settings/provider-models/${provider}${query}`);
+          if (!res.ok) return [];
+          const payload = await res.json();
+          return Array.isArray(payload.models) ? payload.models : [];
+        } catch {
+          return [];
+        }
+      }
+
+      function populateProviderOptions(providers, selected) {
+        providerSelect.innerHTML = "";
+        if (!providers.length) {
+          const option = document.createElement("option");
+          option.value = "";
+          option.textContent = "No providers";
+          option.disabled = true;
+          option.selected = true;
+          providerSelect.appendChild(option);
+          return;
+        }
+
+        providers.forEach((provider) => {
+          const option = document.createElement("option");
+          option.value = provider;
+          option.textContent = provider;
+          if (provider === selected) option.selected = true;
+          providerSelect.appendChild(option);
+        });
+
+        if (!providerSelect.value) {
+          providerSelect.selectedIndex = 0;
+        }
+      }
+
+      function setCustomModelVisibility(show, value = "") {
+        customModelInput.style.display = show ? "block" : "none";
+        customModelInput.required = show;
+        customModelInput.value = show ? value : "";
+      }
+
+      function buildModelOptions(models, selectedModel) {
+        modelSelect.innerHTML = "";
+
+        if (!models.length) {
+          const option = document.createElement("option");
+          option.value = "__custom__";
+          option.textContent = "Custom model";
+          modelSelect.appendChild(option);
+          modelSelect.value = "__custom__";
+          setCustomModelVisibility(true, selectedModel);
+          return;
+        }
+
+        models.forEach((model) => {
+          const option = document.createElement("option");
+          option.value = model;
+          option.textContent = model;
+          modelSelect.appendChild(option);
+        });
+
+        const customOption = document.createElement("option");
+        customOption.value = "__custom__";
+        customOption.textContent = "Custom model";
+        modelSelect.appendChild(customOption);
+
+        if (models.includes(selectedModel)) {
+          modelSelect.value = selectedModel;
+          setCustomModelVisibility(false);
+        } else {
+          modelSelect.value = "__custom__";
+          setCustomModelVisibility(true, selectedModel);
+        }
+      }
+
+      async function refreshModelOptions(provider, selectedModel = "") {
+        if (!settingsCache) return;
+
+        const defaultModel = settingsCache.default_models[provider] || "";
+        modelHint.textContent = `Default for ${provider}: ${defaultModel || "custom"}`;
+
+        let models = await fetchProviderModels(provider);
+        if (!models.length) {
+          models = settingsCache.model_catalog[provider] || [];
+        }
+
+        if (!models.length && defaultModel) {
+          models = [defaultModel];
+        }
+
+        models = Array.from(new Set(models));
+        const current = selectedModel || defaultModel;
+        buildModelOptions(models, current);
+      }
+
+      function getSelectedModel() {
+        if (modelSelect.value === "__custom__") {
+          return customModelInput.value.trim();
+        }
+        return modelSelect.value;
+      }
+
+      function updateApiKeySection(provider) {
+        apiProviderLabel.textContent = `Provider: ${provider.toUpperCase()}`;
+
+        if (provider === "ollama") {
+          apiKeyState.textContent = "API key not required for Ollama.";
+          providerApiKeyInput.value = "";
+          providerApiKeyInput.disabled = true;
+          removeApiKeyBtn.disabled = true;
+          return;
+        }
+
+        const hasKey = !!settingsCache?.api_key_status?.[provider];
+        apiKeyState.textContent = hasKey ? "API key saved." : "API key missing.";
+        providerApiKeyInput.placeholder = `Enter ${provider} API key`;
+        providerApiKeyInput.disabled = hasKey;
+        removeApiKeyBtn.disabled = !hasKey;
+      }
+
+      async function applySettings(settings) {
+        settingsCache = settings;
+        populateProviderOptions(settings.available_providers, settings.provider);
+        ollamaBaseUrl.value = settings.ollama_base_url;
+        temperatureInput.value = String(settings.temperature);
+        await refreshModelOptions(settings.provider, settings.model);
+        updateApiKeySection(settings.provider);
+      }
+
+      providerSelect.addEventListener("change", async () => {
+        if (!settingsCache) return;
+        const provider = providerSelect.value;
+        await refreshModelOptions(provider);
+        updateApiKeySection(provider);
+
+        if (provider === "ollama") {
+          setStatus("Using local Ollama.");
+          return;
+        }
+
+        if (!settingsCache.api_key_status[provider]) {
+          setStatus(`API key required for ${provider}.`, true);
+        } else {
+          setStatus(`API key detected for ${provider}.`);
+        }
+      });
+
+      modelSelect.addEventListener("change", () => {
+        if (modelSelect.value === "__custom__") {
+          setCustomModelVisibility(true);
+        } else {
+          setCustomModelVisibility(false);
+        }
+      });
+
+      ollamaBaseUrl.addEventListener("blur", async () => {
+        if (providerSelect.value === "ollama") {
+          await refreshModelOptions("ollama", getSelectedModel());
+        }
+      });
+
+      removeApiKeyBtn.addEventListener("click", async () => {
+        const provider = providerSelect.value;
+        if (provider === "ollama") {
+          setStatus("Ollama does not require an API key.");
+          return;
+        }
+
+        try {
+          setButtonLoading(removeApiKeyBtn, true, "Removing...");
+          const res = await fetch(`/api/settings/api-keys/${provider}`, { method: "DELETE" });
+          const payload = await res.json();
+          if (!res.ok) throw new Error(payload.detail || "Unable to remove API key");
+
+          const refreshed = await fetchSettings();
+          await applySettings(refreshed);
+          setStatus(`API key removed for ${provider}.`);
+        } catch (error) {
+          setStatus(error.message || "API key action failed.", true);
+        } finally {
+          setButtonLoading(removeApiKeyBtn, false, "Remove API Key");
+        }
+      });
+
+      settingsForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const provider = providerSelect.value;
+        const model = getSelectedModel();
+        if (!model) {
+          setStatus("Select or enter a model name.", true);
+          return;
+        }
+
+        const hasKey = !!settingsCache?.api_key_status?.[provider];
+        const apiKey = providerApiKeyInput.value.trim();
+        if (provider !== "ollama" && !hasKey && !apiKey) {
+          setStatus(`API key required for ${provider}.`, true);
+          return;
+        }
+
+        const payload = {
+          provider,
+          model,
+          ollama_base_url: ollamaBaseUrl.value.trim(),
+          temperature: Number(temperatureInput.value || "0.2"),
+        };
+
+        try {
+          setButtonLoading(saveSettingsBtn, true, "Saving...");
+          if (provider !== "ollama" && apiKey) {
+            const res = await fetch(`/api/settings/api-keys/${provider}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ api_key: apiKey }),
+            });
+            const apiPayload = await res.json();
+            if (!res.ok) throw new Error(apiPayload.detail || "Unable to save API key");
+          }
+
+          const res = await fetch("/api/settings", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "Unable to save settings");
+
+          await applySettings(data);
+          providerApiKeyInput.value = "";
+          setStatus("Settings saved.");
+        } catch (error) {
+          setStatus(error.message || "Unable to save settings.", true);
+        } finally {
+          setButtonLoading(saveSettingsBtn, false, "Save Settings");
+        }
+      });
+
+      (async function init() {
+        try {
+          const settings = await fetchSettings();
+          await applySettings(settings);
+          setStatus("Settings loaded.");
+        } catch {
+          setStatus("Could not load settings.", true);
+        }
+      })();
+    </script>
+  </body>
+</html>

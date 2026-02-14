@@ -1,49 +1,343 @@
-﻿{% extends "base.html" %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RAG Chat</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --ink: #000000;
+        --muted: #222222;
+        --border: #000000;
+        --shadow: rgba(0, 0, 0, 0.08);
+      }
 
-{% block inbox %}
-<div class="inbox-header">
-  <div>
-    <h2>AI Chat Inbox</h2>
-    <p class="inbox-subtitle">Recent conversations</p>
-  </div>
-  <button class="ghost-btn" id="newChatBtn" type="button" aria-label="New chat">+</button>
-</div>
-<ul id="chatList" class="chat-list"></ul>
-<div id="chatListSentinel" class="chat-list-sentinel">Loading more…</div>
-{% endblock %}
+      * {
+        box-sizing: border-box;
+      }
 
-{% block content %}
-<section class="chat-main">
-  <header class="chat-header">
-    <div class="chat-title">
-      <span class="chat-dot"></span>
-      <div>
-        <h1>New Conversation</h1>
-        <p>Ask questions against your indexed documents.</p>
-      </div>
-    </div>
-  </header>
+      html,
+      body {
+        height: 100%;
+      }
 
-  <div id="chatMessages" class="chat-thread"></div>
+      body {
+        margin: 0;
+        font-family: "Georgia", "Times New Roman", serif;
+        color: var(--ink);
+        background-color: var(--bg);
+        background-image:
+          linear-gradient(0deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+        background-size: 24px 24px;
+      }
 
-  <form id="chatForm" class="chat-input">
-    <button type="button" class="icon-btn" id="attachBtn" aria-label="Attach file">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path
-          d="M8.5 12.5l6.8-6.8a3 3 0 114.2 4.2l-8.4 8.4a4.5 4.5 0 01-6.4-6.4l8.1-8.1"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.6"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
-      </svg>
-    </button>
-    <textarea id="chatInput" placeholder="Type your question..." rows="2" required></textarea>
-    <button type="submit" id="sendBtn">Send</button>
-  </form>
-</section>
+      main {
+        max-width: 980px;
+        margin: 0 auto;
+        min-height: 100vh;
+        padding: 16px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        animation: fadeIn 0.35s ease-out;
+        overflow: hidden;
+      }
 
-<script src="{{ url_for('static', path='js/chat.js') }}" defer></script>
-{% endblock %}
+      .nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 12px;
+        border: 2px solid var(--border);
+        background: #ffffff;
+        box-shadow: 6px 6px 0 var(--border);
+      }
 
+      .nav a {
+        text-decoration: none;
+        color: var(--ink);
+        border: 2px solid var(--border);
+        padding: 6px 12px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+      }
+
+      .nav a.active {
+        background: var(--ink);
+        color: #ffffff;
+      }
+
+      header {
+        margin: 0;
+      }
+
+      header h1 {
+        font-size: 30px;
+        margin: 0 0 6px;
+      }
+
+      header p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .panel {
+        border: 2px solid var(--border);
+        padding: 16px;
+        background: #ffffff;
+        box-shadow: 8px 8px 0 var(--border);
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+        gap: 12px;
+      }
+
+      .messages {
+        flex: 1 1 auto;
+        min-height: 0;
+        border: 2px solid var(--border);
+        padding: 16px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: #ffffff;
+      }
+
+      .message {
+        border: 2px solid var(--border);
+        padding: 12px 14px;
+        max-width: 78%;
+        line-height: 1.4;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .message.user {
+        align-self: flex-end;
+        background: var(--ink);
+        color: #ffffff;
+      }
+
+      .message.assistant {
+        align-self: flex-start;
+        background: #ffffff;
+        color: var(--ink);
+      }
+
+      form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      textarea {
+        flex: 1 1 420px;
+        min-height: 80px;
+        padding: 10px;
+        border: 2px solid var(--border);
+        font-family: inherit;
+        font-size: 16px;
+        background: #ffffff;
+        color: var(--ink);
+      }
+
+      button {
+        border: 2px solid var(--border);
+        background: var(--ink);
+        color: #ffffff;
+        padding: 10px 16px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      button.secondary {
+        background: #ffffff;
+        color: var(--ink);
+      }
+
+      button[disabled] {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .status {
+        min-height: 20px;
+        font-weight: 600;
+      }
+
+      .status[data-state="error"] {
+        color: #000000;
+        text-decoration: underline;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 720px) {
+        .message {
+          max-width: 100%;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        main {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <nav class="nav" aria-label="Primary">
+        <a class="active" href="/chat">Chat</a>
+        <a href="/data-management">Data Management</a>
+        <a href="/settings">Settings</a>
+      </nav>
+
+      <header>
+        <h1>Chat</h1>
+        <p>Streaming answers grounded in your indexed documents.</p>
+      </header>
+
+      <section class="panel" aria-live="polite">
+        <div class="messages" id="chatMessages"></div>
+
+        <form id="chatForm">
+          <textarea id="chatInput" placeholder="Ask a question..." required></textarea>
+          <div class="toolbar">
+            <button type="submit" id="sendBtn">Send</button>
+            <button type="button" class="secondary" id="resetBtn">New Chat</button>
+          </div>
+        </form>
+
+        <div class="status" id="status" data-state="ok">Ready.</div>
+      </section>
+    </main>
+
+    <script>
+      const chatForm = document.getElementById("chatForm");
+      const chatInput = document.getElementById("chatInput");
+      const chatMessages = document.getElementById("chatMessages");
+      const sendBtn = document.getElementById("sendBtn");
+      const resetBtn = document.getElementById("resetBtn");
+      const statusEl = document.getElementById("status");
+
+      const history = [];
+
+      function setStatus(text, isError = false) {
+        statusEl.textContent = text;
+        statusEl.dataset.state = isError ? "error" : "ok";
+      }
+
+      function setLoading(isLoading) {
+        sendBtn.disabled = isLoading;
+        sendBtn.textContent = isLoading ? "Sending..." : "Send";
+      }
+
+      function addMessage(role, content) {
+        const el = document.createElement("div");
+        el.className = `message ${role}`;
+        el.textContent = content;
+        chatMessages.appendChild(el);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        return el;
+      }
+
+      function appendToMessage(el, chunk) {
+        el.textContent += chunk;
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+
+      async function streamChat(message) {
+        const response = await fetch("/api/chat/stream", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message, history }),
+        });
+
+        if (!response.ok || !response.body) {
+          throw new Error("Chat stream failed");
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let assistantText = "";
+        const assistantBubble = addMessage("assistant", "");
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            let payload;
+            try {
+              payload = JSON.parse(line);
+            } catch {
+              continue;
+            }
+            if (payload.type === "token") {
+              assistantText += payload.data;
+              appendToMessage(assistantBubble, payload.data);
+            }
+          }
+        }
+
+        const finalText = assistantText.trim();
+        history.push({ role: "assistant", content: finalText || "(empty response)" });
+      }
+
+      chatForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const message = chatInput.value.trim();
+        if (!message) return;
+
+        addMessage("user", message);
+        history.push({ role: "user", content: message });
+        chatInput.value = "";
+        setLoading(true);
+        setStatus("Thinking...");
+
+        try {
+          await streamChat(message);
+          setStatus("Done.");
+        } catch (error) {
+          addMessage("assistant", "Unable to generate a response right now.");
+          setStatus(error.message || "Chat failed.", true);
+        } finally {
+          setLoading(false);
+          chatInput.focus();
+        }
+      });
+
+      resetBtn.addEventListener("click", () => {
+        chatMessages.innerHTML = "";
+        history.length = 0;
+        setStatus("New chat ready.");
+      });
+    </script>
+  </body>
+</html>

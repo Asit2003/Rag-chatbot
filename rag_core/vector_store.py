@@ -4,8 +4,6 @@ from typing import Any
 
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings
 
 from rag_core.config import settings
@@ -25,23 +23,7 @@ def _probe_embeddings(embeddings) -> bool:
 
 
 def _select_embeddings():
-    ollama_embeddings = OllamaEmbeddings(
-        model=settings.ollama_embedding_model,
-        base_url=settings.ollama_base_url,
-    )
-    if _probe_embeddings(ollama_embeddings):
-        return ollama_embeddings
-
     settings_service = SettingsService()
-    gemini_key = settings_service.get_api_key("gemini")
-    if gemini_key:
-        gemini_embeddings = GoogleGenerativeAIEmbeddings(
-            model=settings.gemini_embedding_model,
-            google_api_key=gemini_key,
-        )
-        if _probe_embeddings(gemini_embeddings):
-            return gemini_embeddings
-
     openai_key = settings_service.get_api_key("openai")
     if openai_key:
         openai_embeddings = OpenAIEmbeddings(
@@ -52,7 +34,7 @@ def _select_embeddings():
             return openai_embeddings
 
     raise VectorStoreError(
-        "No embedding provider available. Start Ollama or configure Gemini/OpenAI API keys for embeddings."
+        "No embedding provider available. Configure an OpenAI API key for embeddings."
     )
 
 
@@ -91,7 +73,7 @@ class VectorStore:
             self._get_store().add_documents(documents=docs, ids=ids)
         except Exception as exc:
             raise VectorStoreError(
-                "Embedding/indexing failed. Ensure Ollama is running and the embedding model is available."
+                f"Embedding/indexing failed: {exc}"
             ) from exc
 
     def delete_document(self, doc_id: str) -> None:
@@ -111,7 +93,7 @@ class VectorStore:
             results = self._get_store().similarity_search_with_score(query=query, k=limit)
         except Exception as exc:
             raise VectorStoreError(
-                "Vector search failed. Confirm embedding service and vector store are healthy."
+                "Vector search failed. Confirm OpenAI embeddings and the vector store are healthy."
             ) from exc
 
         hits: list[dict[str, Any]] = []
