@@ -1,26 +1,24 @@
 from __future__ import annotations
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, HTTPException, Query
 
-from app.db.session import get_db
 from app.schemas.settings import ApiKeyUpdate, SettingsOut, SettingsUpdate
-from app.services.settings_service import MODEL_CATALOG, SUPPORTED_PROVIDERS, SettingsService
+from rag_core.settings_service import MODEL_CATALOG, SUPPORTED_PROVIDERS, SettingsService
 
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
 
 
 @router.get("", response_model=SettingsOut)
-def get_settings(db: Session = Depends(get_db)) -> SettingsOut:
-    payload = SettingsService(db).get_settings_payload()
+def get_settings() -> SettingsOut:
+    payload = SettingsService().get_settings_payload()
     return SettingsOut(**payload)
 
 
 @router.put("", response_model=SettingsOut)
-def update_settings(payload: SettingsUpdate, db: Session = Depends(get_db)) -> SettingsOut:
-    service = SettingsService(db)
+def update_settings(payload: SettingsUpdate) -> SettingsOut:
+    service = SettingsService()
     try:
         updated = service.update_settings(
             provider=payload.provider,
@@ -34,8 +32,8 @@ def update_settings(payload: SettingsUpdate, db: Session = Depends(get_db)) -> S
 
 
 @router.put("/api-keys/{provider}")
-def save_api_key(provider: str, body: ApiKeyUpdate, db: Session = Depends(get_db)) -> dict[str, str]:
-    service = SettingsService(db)
+def save_api_key(provider: str, body: ApiKeyUpdate) -> dict[str, str]:
+    service = SettingsService()
     try:
         service.save_api_key(provider=provider, plain_key=body.api_key)
         return {"message": f"API key saved for {provider}."}
@@ -44,8 +42,8 @@ def save_api_key(provider: str, body: ApiKeyUpdate, db: Session = Depends(get_db
 
 
 @router.delete("/api-keys/{provider}")
-def remove_api_key(provider: str, db: Session = Depends(get_db)) -> dict[str, str]:
-    service = SettingsService(db)
+def remove_api_key(provider: str) -> dict[str, str]:
+    service = SettingsService()
     try:
         deleted = service.remove_api_key(provider=provider)
         if not deleted:
@@ -58,10 +56,9 @@ def remove_api_key(provider: str, db: Session = Depends(get_db)) -> dict[str, st
 @router.get("/ollama-models")
 def list_ollama_models(
     base_url: str | None = Query(default=None),
-    db: Session = Depends(get_db),
 ) -> dict[str, list[str]]:
     if not base_url:
-        payload = SettingsService(db).get_settings_payload()
+        payload = SettingsService().get_settings_payload()
         base_url = payload["ollama_base_url"]
     try:
         with httpx.Client(timeout=8) as client:
@@ -78,9 +75,8 @@ def list_ollama_models(
 def list_provider_models(
     provider: str,
     base_url: str | None = Query(default=None),
-    db: Session = Depends(get_db),
 ) -> dict[str, list[str]]:
-    service = SettingsService(db)
+    service = SettingsService()
     if provider not in SUPPORTED_PROVIDERS:
         raise HTTPException(status_code=404, detail="Provider not supported.")
 

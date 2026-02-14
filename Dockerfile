@@ -19,7 +19,7 @@ RUN uv sync --no-dev
 
 COPY . /app
 
-RUN mkdir -p /app/data/uploads /app/data/chroma /app/data/secrets
+RUN mkdir -p /app/data/uploads /app/data/chroma /app/data/secrets /app/data/config
 
 EXPOSE 8000
 

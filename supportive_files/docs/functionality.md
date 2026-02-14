@@ -46,11 +46,13 @@
   - model
   - ollama base URL
   - temperature
+  - stored in `data/config/settings.json`
 
 ## 4. Security and Storage
 
 - API keys encrypted at rest using Fernet.
 - Encryption key stored in `data/secrets/fernet.key`.
-- App metadata stored in PostgreSQL.
-- Uploaded files stored in `data/uploads/`.
+- App metadata stored in PostgreSQL (Supabase).
+- Uploaded files stored in Supabase Storage by default when configured.
+- Local fallback storage lives at `data/uploads/`.
 - Chroma vectors stored in `data/chroma/`.

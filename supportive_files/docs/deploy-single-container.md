@@ -30,9 +30,14 @@ Set environment variables in your cloud container service:
 - `APP_HOST=0.0.0.0`
 - `APP_PORT=8000`
 - `OLLAMA_BASE_URL` (if Ollama reachable from your deployment network)
-- `OLLAMA_EMBED_MODEL=nomic-embed-text`
+- `OLLAMA_EMBED_MODEL=bge-m3`
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_STORAGE_BUCKET=documents`
+- `SUPABASE_STORAGE_PREFIX=documents`
+- `DOC_STORAGE_BACKEND` (optional, set to `supabase` or `local`)
 
-Mount persistent storage for `/app/data` for uploads/chroma/secrets.
+Mount persistent storage for `/app/data` for chroma/secrets/settings.
 
 ## 5. Run Health Check
 

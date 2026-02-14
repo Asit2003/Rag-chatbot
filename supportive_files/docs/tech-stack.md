@@ -3,14 +3,16 @@
 ## Backend
 
 - **FastAPI**: async-friendly API framework with clean route/dependency model.
-- **SQLAlchemy + PostgreSQL (Supabase)**: robust relational persistence for settings, API-key metadata, and document metadata.
+- **SQLAlchemy + PostgreSQL (Supabase)**: document metadata persistence (Supabase-only).
+- **Supabase Storage**: document file storage in production.
 - **LangChain**:
   - `RecursiveCharacterTextSplitter` for consistent chunking.
   - LangChain chat model integrations for OpenAI, Anthropic, Gemini, Groq, and Ollama.
   - `langchain-chroma` integration for retrieval from vector DB.
 - **ChromaDB (persistent)**: free/open-source vector database for local or containerized deployment.
+- **Ollama embeddings (`bge-m3`)**: strong multilingual embedding model for retrieval.
 - **PyPDF + python-docx**: extraction for PDF and DOCX.
-- **Cryptography (Fernet)**: encrypted API-key storage at rest.
+- **JSON settings + Cryptography (Fernet)**: encrypted API-key storage at rest in `data/config/settings.json`.
 - **uv**: fast dependency/environment management with project env path set to `rag`.
 
 ## Frontend
