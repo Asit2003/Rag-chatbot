@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: rag-chatbot
+    runtime: python
+    plan: free
+    buildCommand: |
+      python -m pip install --upgrade pip
+      pip install uv
+      uv sync --frozen --no-dev
+    startCommand: uv run uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: APP_HOST
+        value: 0.0.0.0
+      - key: APP_PORT
+        value: "8000"
+      - key: MAX_UPLOAD_SIZE_MB
+        value: "200"
+      - key: DOC_STORAGE_BACKEND
+        value: supabase
+      - key: SUPABASE_DB_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_STORAGE_BUCKET
+        value: documents
+      - key: SUPABASE_STORAGE_PREFIX
+        value: documents
+      - key: UV_LINK_MODE
+        value: copy
