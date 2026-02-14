@@ -15,20 +15,27 @@ node "FastAPI App" as API {
   component "Settings Service"
   component "RAG Service"
   component "LangChain Layer\n(Text Splitter + Retrieval + Chat Models)"
+  component "Storage Backend\n(Local or Supabase)"
 }
 
-database "PostgreSQL\nsettings + metadata" as POSTGRES
+database "PostgreSQL\n(document metadata)" as POSTGRES
 database "ChromaDB\ndata/chroma/" as CHROMA
 folder "Uploads\ndata/uploads/" as UPLOADS
+folder "Settings File\ndata/config/settings.json" as SETTINGS
 folder "Secrets\ndata/secrets/" as SECRETS
-cloud "LLM Providers\n(OpenAI/Anthropic/Gemini/Groq/Ollama)" as LLM
+cloud "LLM Providers\n(Ollama/OpenAI/Anthropic/Gemini/Groq)" as LLM
+cloud "OpenAI Embeddings" as EMBED
+cloud "Supabase Storage" as SB_STORAGE
 
 User --> UI
 UI --> API : HTTP/JSON + NDJSON stream
-API --> POSTGRES : settings + document metadata
-API --> UPLOADS : store/remove files
+API --> POSTGRES : document metadata
+API --> SETTINGS : settings + encrypted API keys
+API --> SECRETS : fernet key
 API --> CHROMA : add/query/delete vectors
-API --> SECRETS : encrypted API keys
+CHROMA --> EMBED : embeddings
 API --> LLM : streaming completions via LangChain
+API --> UPLOADS : store/remove files (local)
+API --> SB_STORAGE : store/remove files (supabase)
 
 @enduml

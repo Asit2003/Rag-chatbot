@@ -70,14 +70,17 @@ class RagService:
 
     "WHEN CONTEXT IS PARTIAL:\n"
     "- Answer the part supported by context.\n"
-    "- Ask 1–2 focused follow-up questions, if required.\n"
+    "- Ask 1-2 focused follow-up questions, if required.\n"
 
     "WHEN NO RELEVANT CONTEXT IS AVAILABLE:\n"
     "- Do NOT say you lack context or documents.\n"
     "- Provide general guidance based on common best practices.\n"
     "- Clearly signal uncertainty with phrases like "
     "'Typically', 'In general', or 'This may depend on your setup'.\n"
-    "politely handle requests for information not in the context. \n"
+    "Politely handle requests for information not in the context.\n"
+
+    "WHEN THE QUESTION IS IRRELEVANT:\n"
+    "- Ignore it and do not answer.\n"
 
     "STYLE:\n"
     "- Be concise, neutral, and helpful.\n"

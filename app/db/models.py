@@ -1,3 +1,3 @@
-from rag_core.db.models import ChatSession, Document
+from rag_core.db.models import Document
 
-__all__ = ["ChatSession", "Document"]
+__all__ = ["Document"]
