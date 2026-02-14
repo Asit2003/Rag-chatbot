@@ -11,11 +11,18 @@
 ## Installation (uv)
 
 ```bash
-export UV_PROJECT_ENVIRONMENT=rag
 uv sync
 ```
 
-This creates and uses a project virtual environment at `./rag`.
+This creates and uses a project virtual environment at `./.venv`.
+
+## Installation (any venv)
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install -e .
+```
 
 ## Environment Variables
 
@@ -25,11 +32,12 @@ Copy and edit `.env.example`.
 APP_NAME=RAG Chatbot
 APP_HOST=0.0.0.0
 APP_PORT=8000
-UV_PROJECT_ENVIRONMENT=rag
 SUPABASE_DB_URL=postgresql+psycopg://postgres:<password>@db.<project-ref>.supabase.co:5432/postgres?sslmode=require
 MAX_UPLOAD_SIZE_MB=20
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_EMBED_MODEL=bge-m3
+GEMINI_EMBED_MODEL=text-embedding-004
+OPENAI_EMBED_MODEL=text-embedding-3-large
 DOC_STORAGE_BACKEND=
 SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=

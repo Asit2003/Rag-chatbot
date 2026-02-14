@@ -10,7 +10,7 @@
   - LangChain chat model integrations for OpenAI, Anthropic, Gemini, Groq, and Ollama.
   - `langchain-chroma` integration for retrieval from vector DB.
 - **ChromaDB (persistent)**: free/open-source vector database for local or containerized deployment.
-- **Ollama embeddings (`bge-m3`)**: strong multilingual embedding model for retrieval.
+- **Embeddings fallback**: Ollama `bge-m3`, then Gemini `text-embedding-004`, then OpenAI `text-embedding-3-large`.
 - **PyPDF + python-docx**: extraction for PDF and DOCX.
 - **JSON settings + Cryptography (Fernet)**: encrypted API-key storage at rest in `data/config/settings.json`.
 - **uv**: fast dependency/environment management with project env path set to `rag`.

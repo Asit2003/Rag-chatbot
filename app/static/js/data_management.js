@@ -1,8 +1,9 @@
-const uploadForm = document.getElementById("uploadForm");
+﻿const uploadForm = document.getElementById("uploadForm");
 const fileInput = document.getElementById("fileInput");
 const filesTable = document.getElementById("filesTable");
 const refreshBtn = document.getElementById("refreshBtn");
 const toast = document.getElementById("toast");
+const uploadBtn = uploadForm?.querySelector("button[type='submit']");
 
 function bytesToSize(bytes) {
   if (bytes < 1024) return `${bytes} B`;
@@ -16,6 +17,20 @@ function showToast(text, timeout = 2800) {
   setTimeout(() => {
     toast.hidden = true;
   }, timeout);
+}
+
+function setButtonLoading(button, isLoading, loadingText, defaultText) {
+  if (!button) return;
+  if (isLoading) {
+    button.dataset.defaultText = button.textContent;
+    button.textContent = loadingText;
+    button.classList.add("is-loading");
+    button.disabled = true;
+  } else {
+    button.textContent = button.dataset.defaultText || defaultText || button.textContent;
+    button.classList.remove("is-loading");
+    button.disabled = false;
+  }
 }
 
 async function fetchFiles() {
@@ -102,19 +117,25 @@ uploadForm.addEventListener("submit", async (event) => {
   }
 
   try {
+    setButtonLoading(uploadBtn, true, "Uploading...");
     await uploadFiles(fileInput.files);
     fileInput.value = "";
     await renderFiles();
   } catch (error) {
     showToast(error.message || "Upload failed");
+  } finally {
+    setButtonLoading(uploadBtn, false, "", "Upload & Index");
   }
 });
 
 refreshBtn.addEventListener("click", async () => {
   try {
+    setButtonLoading(refreshBtn, true, "Refreshing...");
     await renderFiles();
   } catch (error) {
     showToast("Unable to refresh files");
+  } finally {
+    setButtonLoading(refreshBtn, false, "", "Refresh");
   }
 });
 
@@ -157,3 +178,4 @@ filesTable.addEventListener("click", async (event) => {
 });
 
 renderFiles().catch(() => showToast("Unable to load documents"));
+

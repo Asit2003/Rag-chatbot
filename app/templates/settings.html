@@ -1,4 +1,21 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
+
+{% block inbox %}
+<div class="inbox-header">
+  <div>
+    <h2>Providers</h2>
+    <p class="inbox-subtitle">Active model and keys</p>
+  </div>
+</div>
+<div class="inbox-list">
+  <div class="inbox-card">Ollama (local)</div>
+  <div class="inbox-card">OpenAI</div>
+  <div class="inbox-card">Gemini</div>
+  <div class="inbox-card">Anthropic</div>
+  <div class="inbox-card">Groq</div>
+</div>
+{% endblock %}
+
 {% block content %}
 <section class="page-header">
   <h1>Settings</h1>
@@ -29,24 +46,23 @@
       <input id="temperature" type="number" min="0" max="2" step="0.1" />
     </label>
 
-    <button type="submit">Save Settings</button>
+    <div class="api-inline">
+      <div>
+        <div id="apiProviderLabel" class="api-inline-title">Provider: OLLAMA</div>
+        <div id="apiKeyState" class="api-status">API key not required for Ollama.</div>
+        <div id="apiKeyInputWrap">
+          <input id="providerApiKeyInput" type="password" placeholder="Enter provider API key" />
+          <p class="hint">Use Save Settings to store the key.</p>
+        </div>
+      </div>
+      <button id="removeApiKeyBtn" class="secondary" type="button">Remove Key</button>
+    </div>
+
+    <button type="submit" id="saveSettingsBtn">Save Settings</button>
   </form>
 </section>
 
-<section class="card">
-  <h2>API Key</h2>
-  <p class="hint">One API key is needed per provider, not per model. Use the selected provider below.</p>
-  <div class="api-card">
-    <h3 id="apiProviderLabel">Provider: OLLAMA</h3>
-    <div id="apiKeyState" class="api-status">API key not required for Ollama.</div>
-    <input id="providerApiKeyInput" type="password" placeholder="Enter provider API key" />
-    <div class="composer-actions">
-      <button id="saveApiKeyBtn" type="button">Save Key</button>
-      <button id="removeApiKeyBtn" class="secondary" type="button">Remove Key</button>
-    </div>
-  </div>
-</section>
-
 <div id="status" class="status" aria-live="polite"></div>
-<script src="/static/js/settings.js" defer></script>
+<script src="{{ url_for('static', path='js/settings.js') }}" defer></script>
 {% endblock %}
+

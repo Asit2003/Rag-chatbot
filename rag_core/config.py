@@ -43,6 +43,8 @@ class AppSettings:
 
     ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     ollama_embedding_model: str = os.getenv("OLLAMA_EMBED_MODEL", "bge-m3")
+    gemini_embedding_model: str = os.getenv("GEMINI_EMBED_MODEL", "text-embedding-004")
+    openai_embedding_model: str = os.getenv("OPENAI_EMBED_MODEL", "text-embedding-3-large")
 
     supabase_url: str = os.getenv("SUPABASE_URL", "")
     supabase_service_key: str = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_ANON_KEY", "")

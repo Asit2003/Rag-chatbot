@@ -18,12 +18,22 @@ Production-structured, streaming RAG chatbot built with Python, HTML, CSS, and J
 - ChromaDB (persistent local) as vector DB
 - `uv` for Python dependency and environment management
 
-## Quick Start (uv)
+## Quick Start
+
+Option A (uv):
 
 ```bash
-export UV_PROJECT_ENVIRONMENT=rag
 uv sync
 uv run python run.py
+```
+
+Option B (any venv):
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install -e .
+python run.py
 ```
 
 Open [http://localhost:8000](http://localhost:8000).
@@ -40,6 +50,7 @@ Open [http://localhost:8000](http://localhost:8000).
 - Embeddings (Ollama): `bge-m3` for high-quality multilingual retrieval across providers.
 - Embeddings are provider-agnostic, so you can switch chat models without re-indexing.
 - If you change `OLLAMA_EMBED_MODEL`, re-upload documents to rebuild vectors.
+- Embedding fallback order: Ollama → Gemini → OpenAI (if API keys exist).
 
 ## Documentation
 

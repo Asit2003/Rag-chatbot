@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api.routes import chat, files, pages, settings
 from rag_core.config import settings as app_settings
 from rag_core.db import Base
+from rag_core.db import models  # noqa: F401
 from rag_core.db.session import engine
 
 
@@ -26,7 +27,8 @@ def create_app() -> FastAPI:
     Base.metadata.create_all(bind=engine)
 
     app = FastAPI(title=app_settings.app_name, version="1.0.0")
-    app.mount("/static", StaticFiles(directory="app/static"), name="static")
+    static_dir = Path(__file__).resolve().parent / "static"
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
     app.include_router(pages.router)
     app.include_router(files.router)

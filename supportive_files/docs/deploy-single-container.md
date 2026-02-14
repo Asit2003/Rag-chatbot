@@ -25,7 +25,6 @@ docker push <dockerhub-user>/rag-chatbot:latest
 
 Set environment variables in your cloud container service:
 
-- `UV_PROJECT_ENVIRONMENT=rag`
 - `SUPABASE_DB_URL=postgresql+psycopg://postgres:<password>@db.<project-ref>.supabase.co:5432/postgres?sslmode=require`
 - `APP_HOST=0.0.0.0`
 - `APP_PORT=8000`

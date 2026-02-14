@@ -3,7 +3,7 @@ from __future__ import annotations
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from rag_core.db.models import Document
+from rag_core.db.models import ChatSession, Document
 
 
 class DocumentRepository:
@@ -27,3 +27,18 @@ class DocumentRepository:
         self.db.delete(document)
         self.db.commit()
 
+
+class ChatRepository:
+    def __init__(self, db: Session) -> None:
+        self.db = db
+
+    def list_chats(self, limit: int, offset: int) -> list[ChatSession]:
+        stmt = select(ChatSession).order_by(ChatSession.updated_at.desc()).limit(limit).offset(offset)
+        return list(self.db.scalars(stmt).all())
+
+    def create_chat(self, title: str, preview: str = "") -> ChatSession:
+        chat = ChatSession(title=title, preview=preview)
+        self.db.add(chat)
+        self.db.commit()
+        self.db.refresh(chat)
+        return chat

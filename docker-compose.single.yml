@@ -7,7 +7,6 @@ services:
     env_file:
       - .env
     environment:
-      - UV_PROJECT_ENVIRONMENT=${UV_PROJECT_ENVIRONMENT:-rag}
       - SUPABASE_DB_URL=${SUPABASE_DB_URL}
       - APP_HOST=0.0.0.0
       - APP_PORT=8000

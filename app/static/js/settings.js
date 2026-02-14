@@ -1,16 +1,17 @@
-const providerSelect = document.getElementById("providerSelect");
+﻿const providerSelect = document.getElementById("providerSelect");
 const modelSelect = document.getElementById("modelSelect");
 const customModelInput = document.getElementById("customModelInput");
 const modelHint = document.getElementById("modelHint");
 const ollamaBaseUrl = document.getElementById("ollamaBaseUrl");
 const temperatureInput = document.getElementById("temperature");
 const settingsForm = document.getElementById("settingsForm");
+const saveSettingsBtn = document.getElementById("saveSettingsBtn");
 const status = document.getElementById("status");
 
 const apiProviderLabel = document.getElementById("apiProviderLabel");
 const apiKeyState = document.getElementById("apiKeyState");
 const providerApiKeyInput = document.getElementById("providerApiKeyInput");
-const saveApiKeyBtn = document.getElementById("saveApiKeyBtn");
+const apiKeyInputWrap = document.getElementById("apiKeyInputWrap");
 const removeApiKeyBtn = document.getElementById("removeApiKeyBtn");
 
 let settingsCache = null;
@@ -18,6 +19,20 @@ let settingsCache = null;
 function setStatus(text, isError = false) {
   status.textContent = text;
   status.style.color = isError ? "#c62828" : "#5f6b7a";
+}
+
+function setButtonLoading(button, isLoading, loadingText, defaultText) {
+  if (!button) return;
+  if (isLoading) {
+    button.dataset.defaultText = button.textContent;
+    button.textContent = loadingText || button.textContent;
+    button.classList.add("is-loading");
+    button.disabled = true;
+  } else {
+    button.textContent = button.dataset.defaultText || defaultText || button.textContent;
+    button.classList.remove("is-loading");
+    button.disabled = false;
+  }
 }
 
 async function fetchSettings() {
@@ -116,7 +131,7 @@ function updateApiKeySection(provider) {
     apiKeyState.textContent = "API key not required for Ollama.";
     providerApiKeyInput.value = "";
     providerApiKeyInput.disabled = true;
-    saveApiKeyBtn.disabled = true;
+    apiKeyInputWrap.style.display = "none";
     removeApiKeyBtn.disabled = true;
     return;
   }
@@ -125,9 +140,9 @@ function updateApiKeySection(provider) {
   apiKeyState.className = `api-status ${hasKey ? "ok" : "missing"}`;
   apiKeyState.textContent = hasKey ? "API key saved." : "API key missing.";
   providerApiKeyInput.placeholder = `Enter ${provider} API key`;
-  providerApiKeyInput.disabled = false;
-  saveApiKeyBtn.disabled = false;
-  removeApiKeyBtn.disabled = false;
+  providerApiKeyInput.disabled = hasKey;
+  apiKeyInputWrap.style.display = hasKey ? "none" : "block";
+  removeApiKeyBtn.disabled = !hasKey;
 }
 
 async function applySettings(settings) {
@@ -173,38 +188,6 @@ ollamaBaseUrl.addEventListener("blur", async () => {
   }
 });
 
-saveApiKeyBtn.addEventListener("click", async () => {
-  const provider = providerSelect.value;
-  if (provider === "ollama") {
-    setStatus("Ollama does not require an API key.");
-    return;
-  }
-
-  const key = providerApiKeyInput.value.trim();
-  if (!key) {
-    setStatus("Enter an API key before saving.", true);
-    return;
-  }
-
-  try {
-    const res = await fetch(`/api/settings/api-keys/${provider}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ api_key: key }),
-    });
-    const payload = await res.json();
-    if (!res.ok) throw new Error(payload.detail || "Unable to save API key");
-
-    providerApiKeyInput.value = "";
-    const refreshed = await fetchSettings();
-    await applySettings(refreshed);
-    await refreshModelOptions(provider, getSelectedModel());
-    setStatus(`API key saved for ${provider}.`);
-  } catch (error) {
-    setStatus(error.message || "API key action failed", true);
-  }
-});
-
 removeApiKeyBtn.addEventListener("click", async () => {
   const provider = providerSelect.value;
   if (provider === "ollama") {
@@ -213,6 +196,7 @@ removeApiKeyBtn.addEventListener("click", async () => {
   }
 
   try {
+    setButtonLoading(removeApiKeyBtn, true, "Removing...", "Remove Key");
     const res = await fetch(`/api/settings/api-keys/${provider}`, { method: "DELETE" });
     const payload = await res.json();
     if (!res.ok) throw new Error(payload.detail || "Unable to remove API key");
@@ -222,26 +206,47 @@ removeApiKeyBtn.addEventListener("click", async () => {
     setStatus(`API key removed for ${provider}.`);
   } catch (error) {
     setStatus(error.message || "API key action failed", true);
+  } finally {
+    setButtonLoading(removeApiKeyBtn, false, "", "Remove Key");
   }
 });
 
 settingsForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
+  const provider = providerSelect.value;
   const model = getSelectedModel();
   if (!model) {
     setStatus("Select or enter a model name.", true);
     return;
   }
 
+  const hasKey = !!settingsCache?.api_key_status?.[provider];
+  const apiKey = providerApiKeyInput.value.trim();
+  if (provider !== "ollama" && !hasKey && !apiKey) {
+    setStatus(`API key required for ${provider}.`, true);
+    return;
+  }
+
   const payload = {
-    provider: providerSelect.value,
+    provider,
     model,
     ollama_base_url: ollamaBaseUrl.value.trim(),
     temperature: Number(temperatureInput.value || "0.2"),
   };
 
   try {
+    setButtonLoading(saveSettingsBtn, true, "Saving...", "Save Settings");
+    if (provider !== "ollama" && apiKey) {
+      const res = await fetch(`/api/settings/api-keys/${provider}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ api_key: apiKey }),
+      });
+      const payload = await res.json();
+      if (!res.ok) throw new Error(payload.detail || "Unable to save API key");
+    }
+
     const res = await fetch("/api/settings", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -251,9 +256,12 @@ settingsForm.addEventListener("submit", async (event) => {
     if (!res.ok) throw new Error(data.detail || "Unable to save settings");
 
     await applySettings(data);
+    providerApiKeyInput.value = "";
     setStatus("Settings saved.");
   } catch (error) {
     setStatus(error.message || "Unable to save settings", true);
+  } finally {
+    setButtonLoading(saveSettingsBtn, false, "", "Save Settings");
   }
 });
 
@@ -266,3 +274,4 @@ settingsForm.addEventListener("submit", async (event) => {
     setStatus("Could not load settings.", true);
   }
 })();
+

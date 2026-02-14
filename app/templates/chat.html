@@ -1,20 +1,49 @@
-{% extends "base.html" %}
-{% block content %}
-<section class="page-header">
-  <h1>Chat Interface</h1>
-  <p>Ask questions against your indexed documents with streamed responses.</p>
-</section>
+﻿{% extends "base.html" %}
 
-<section class="card chat-card">
-  <div id="chatMessages" class="chat-messages"></div>
-  <form id="chatForm" class="chat-composer">
-    <textarea id="chatInput" placeholder="Type your question..." rows="3" required></textarea>
-    <div class="composer-actions">
-      <button type="submit" id="sendBtn">Send</button>
-      <button type="button" id="clearBtn" class="secondary">Clear</button>
+{% block inbox %}
+<div class="inbox-header">
+  <div>
+    <h2>AI Chat Inbox</h2>
+    <p class="inbox-subtitle">Recent conversations</p>
+  </div>
+  <button class="ghost-btn" id="newChatBtn" type="button" aria-label="New chat">+</button>
+</div>
+<ul id="chatList" class="chat-list"></ul>
+<div id="chatListSentinel" class="chat-list-sentinel">Loading more…</div>
+{% endblock %}
+
+{% block content %}
+<section class="chat-main">
+  <header class="chat-header">
+    <div class="chat-title">
+      <span class="chat-dot"></span>
+      <div>
+        <h1>New Conversation</h1>
+        <p>Ask questions against your indexed documents.</p>
+      </div>
     </div>
+  </header>
+
+  <div id="chatMessages" class="chat-thread"></div>
+
+  <form id="chatForm" class="chat-input">
+    <button type="button" class="icon-btn" id="attachBtn" aria-label="Attach file">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M8.5 12.5l6.8-6.8a3 3 0 114.2 4.2l-8.4 8.4a4.5 4.5 0 01-6.4-6.4l8.1-8.1"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </button>
+    <textarea id="chatInput" placeholder="Type your question..." rows="2" required></textarea>
+    <button type="submit" id="sendBtn">Send</button>
   </form>
 </section>
 
-<script src="/static/js/chat.js" defer></script>
+<script src="{{ url_for('static', path='js/chat.js') }}" defer></script>
 {% endblock %}
+
